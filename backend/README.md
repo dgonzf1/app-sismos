@@ -22,3 +22,10 @@ Things you may want to cover:
 * Deployment instructions
 
 * ...
+
+## Populate database.
+
+ To populate database run 
+'''
+  rake data:fill_database
+'''
