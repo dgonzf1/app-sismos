@@ -3,9 +3,20 @@ class EqFeaturesController < ApplicationController
 
   # GET /eq_features
   def index
-    @eq_features = EqFeature.all
+    per_page = Kaminari.config.max_per_page
+    per_page = params[:per_page].to_i.positive? ? params[:per_page].to_i : per_page
+    @eq_features = EqFeature.page(params[:page]).per(per_page)
+    pagination_info = {
+      current_page: @eq_features.current_page,
+      total: @eq_features.total_count,
+      per_page: @eq_features.current_per_page
+    }
 
-    render json: @eq_features
+    response_data = {
+      data: @eq_features,
+      pagination: pagination_info
+    }
+    render json: response_data
   end
 
   # GET /eq_features/1
