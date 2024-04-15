@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import Separator from './Separator'; // Assuming Separator.js is in the same directory
 
 function MainPage() {
   const [features, setFeatures] = useState([]);
@@ -16,7 +15,13 @@ function MainPage() {
   };
 
   const handlePerPageChange = (event) => {
-    setPerPage(parseInt(event.target.value));
+    const perPageValue = parseInt(event.target.value);
+    if (perPageValue <= 1000 && perPageValue > 4) {
+      setPerPage(perPageValue);
+    } else {
+      alert("The number of elements per page cannot exceed 1000.");
+      setPerPage(100);
+    }
   };
 
   const handleMagTypeChange = (event, magType) => {
@@ -28,11 +33,24 @@ function MainPage() {
     }
   };
 
+  const handlePageChange = (newPage) => {
+    // Ensure the new page is within bounds
+    const safeNewPage = Math.min(Math.max(newPage, 1), totalPages);
+  
+    // Update the current page state
+    setCurrentPage(safeNewPage);
+  
+    // Fetch data only if the new page is different from the current page
+    if (safeNewPage !== currentPage) {
+      fetchFeatures(safeNewPage); 
+    }
+  };
+
   const fetchFeatures = async () => {
     const magTypeQueryParam = selectedMagTypes.length > 0 ? `&mag_types=${selectedMagTypes.join(',')}` : '';
     const url = `http://localhost:3000/eq_features?page=${currentPage}&per_page=${perPage}${magTypeQueryParam}`;
 
-
+    
     try {
       const response = await axios.get(url);
       setFeatures(response.data.data.map((feature) => ({
@@ -42,15 +60,24 @@ function MainPage() {
           humanReadableTime: new Date(feature.attributes.time).toLocaleString(),
         },
       })));
-      setTotalPages(response.data.pagination.total);
+      
+    const totalElements = response.data.pagination.total;
+    const totalPages = Math.ceil(totalElements / perPage);
+    console.log(totalPages)
+
+    setTotalPages(totalPages);
+
+    // Ensure currentPage doesn't exceed the total number of pages
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
     } catch (error) {
       console.error('Error fetching features:', error);
-      // Handle errors appropriately (e.g., display an error message to the user)
     }
   };
 
   useEffect(() => {
-  }, [currentPage, selectedMagTypes, perPage]); // Refetch on page change, filter change, or perPage change
+  }, [currentPage, selectedMagTypes, perPage]); 
 
   const featureDetails = [
     'Magnitude',
@@ -135,7 +162,6 @@ function MainPage() {
                     {feature.attributes.mag_type}
                   </div>
                 </td>
-                {/* ... other feature data with similar inline styles */}
                 
               </tr>
             ))
