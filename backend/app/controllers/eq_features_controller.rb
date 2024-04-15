@@ -1,6 +1,30 @@
 class EqFeaturesController < ApplicationController
   before_action :set_eq_feature, only: %i[ show update destroy ]
 
+  def aux_map(feature)
+    new_body = {
+      "id": feature["id"],
+      "type": "feature",
+      "attributes": {
+        "external_id": feature["feature_id"],
+        "magnitude": feature["mag"],
+        "place": feature["place"],
+        "time": feature["time"],
+        "tsunami": feature["tsunami"],
+        "mag_type": feature["magType"],
+        "title": feature["title"],
+        "coordinates": {
+          "longitude": feature["longitude"],
+          "latitude": feature["latitude"]
+        }
+      },
+      "links": {
+      "external_url": feature["url"]
+      },
+      "comments": feature["comments"]
+      }
+  end
+
   # GET /eq_features
   def index
     per_page = Kaminari.config.max_per_page
@@ -20,8 +44,9 @@ class EqFeaturesController < ApplicationController
       per_page: @eq_features.current_per_page
     }
 
+    formatted_data = @eq_features.map do |feature| aux_map(feature) end 
     response_data = {
-      data: @eq_features,
+      data: formatted_data,
       pagination: pagination_info
     }
     render json: response_data
