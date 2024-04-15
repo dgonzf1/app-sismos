@@ -93,6 +93,10 @@ class EqFeaturesController < ApplicationController
       feature_id = comment_data["feature_id"]
       body = comment_data["body"]
 
+      if body.blank?
+        raise ArgumentError, "Blank body not allowed in comment body"
+      end
+
       # Check for semicolon in body
       if comment_data["body"]&.include?(";")
         raise ArgumentError, "Semicolon (;) not allowed in comment body"
