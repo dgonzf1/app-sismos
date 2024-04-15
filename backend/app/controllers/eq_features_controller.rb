@@ -5,7 +5,15 @@ class EqFeaturesController < ApplicationController
   def index
     per_page = Kaminari.config.max_per_page
     per_page = params[:per_page].to_i.positive? ? params[:per_page].to_i : per_page
-    @eq_features = EqFeature.page(params[:page]).per(per_page)
+    mag_type_values = params[:mag_types]&.split(",")&.map(&:strip) || []
+
+    # Filter based on mag_type_values if present
+    if mag_type_values.any?
+      @eq_features = EqFeature.where(magType: mag_type_values).page(params[:page]).per(per_page)
+    else
+      @eq_features = EqFeature.page(params[:page]).per(per_page)
+    end
+    
     pagination_info = {
       current_page: @eq_features.current_page,
       total: @eq_features.total_count,
