@@ -1,13 +1,14 @@
 # app-sismos
 
-Aplicacion que debe poder obtener datos sismologicos, guardarlos, filtrarlos y permitir comentarios en estos datos.
+Aplicacion para obtener datos sismologicos y realizar comentarios sobre estos. 
+Backend y Frontend deben ser iniciados de manera separada como se especifica en los README de cada parte.
+Para iniciar la aplicacion, primero seguir las instrucciones que se encuentran en el README dentro de la carpeta backend,
+y luego las instruccion del README que se encuentran dentro de la carpeta frontend.
 
 ## TODO
 
- - Improve applitacion description.
+ - Improve application documentaion.
+ - Add Dockerfile for frontend and backend.
+ - Add deployment options for frontend and backend.
 
-## Developer section.
 
-  This section is used for any developing information that could be useful for this project.
-
-  - The api used to retrieve data schema can be found here https://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson.php
