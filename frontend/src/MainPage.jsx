@@ -5,8 +5,12 @@ function MainPage() {
   const [features, setFeatures] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
-  const [selectedMagTypes, setSelectedMagTypes] = useState([]); // State for selected mag_types
-  const [perPage, setPerPage] = useState(10); // State for per_page limit
+  const [selectedMagTypes, setSelectedMagTypes] = useState([]); 
+  const [perPage, setPerPage] = useState(10);
+  const [comment, setComment] = useState(''); 
+  const [comments, setComments] = useState({}); // Store comments for each feature
+  const [selectedFeatureId, setSelectedFeatureId] = useState(null); 
+
 
   const magTypeOptions = ['md', 'ml', 'ms', 'mw', 'me', 'mi', 'mb', 'mlg']; // Constant mag_types
 
@@ -80,13 +84,58 @@ function MainPage() {
   }, [currentPage, selectedMagTypes, perPage]); 
 
   const featureDetails = [
+    'Title',
     'Magnitude',
     'Place',
     'Time',
     'External ID',
     'Tsunami Warning',
     'Magnitude Type',
+    'Coordinates',
+    'URL',
+    'Comments'
   ];
+
+  const handleCommentSubmit = async (featureId) => {
+    try {
+      // Check if the comment is empty
+      if (!comment.trim()) {
+        alert("Please enter a non-empty comment.");
+        return;
+      }
+    
+      // Check if the comment contains a semicolon
+      if (comment.includes(';')) {
+        alert("Please avoid using semicolons in your comment.");
+        return;
+      }
+      // Send a POST request to add a comment
+      await axios.post('http://localhost:3000/eq_features/add_comment', {
+        feature_id: featureId,
+        body: comment,
+      });
+      
+      // Add the comment to the comments state
+      setComments({
+        ...comments,
+        [featureId]: [...(comments[featureId] || []), comment],
+      });
+
+      // Clear the comment input
+      setComment('');
+      fetchFeatures();
+    } catch (error) {
+      console.error('Error submitting comment:', error);
+    }
+  };
+
+  const toggleExpand = (featureId) => {
+    if (expandedFeatureId === featureId) {
+      setExpandedFeatureId(null);
+    } else {
+      setExpandedFeatureId(featureId);
+    }
+  };
 
   return (
     <div>
@@ -131,7 +180,13 @@ function MainPage() {
         <tbody>
           {features.length > 0 ? (
             features.map((feature) => (
-              <tr key={feature.id}>
+              <React.Fragment key={feature.id}>
+              <tr >
+                <td>
+                  <div style={{ borderRight: '1px solid #ddd', padding: '5px' }}>
+                    {feature.attributes.title}
+                  </div>
+                </td>
                 <td>
                   <div style={{ borderRight: '1px solid #ddd', padding: '5px' }}>
                     {feature.attributes.magnitude}
@@ -162,8 +217,44 @@ function MainPage() {
                     {feature.attributes.mag_type}
                   </div>
                 </td>
-                
+                <td>
+                  <div style={{ borderRight: '1px solid #ddd', padding: '5px' }}>
+                    Lon: {feature.attributes.coordinates.longitude}, Lat: {feature.attributes.coordinates.latitude}
+                  </div>
+                </td>
+                <td>
+                  <div style={{ borderRight: '1px solid #ddd', padding: '5px' }}>
+                  <a href={feature.links.external_url} target="_blank" rel="noopener noreferrer">
+                  Link
+                  </a>
+                  </div>
+                </td>
+                <td>
+                  <button onClick={() => setSelectedFeatureId(feature.id)}>Expand</button>
+                </td>
               </tr>
+              {selectedFeatureId === feature.id && (
+                <tr>
+                  <td colSpan="10">
+                    {feature.comments ? (
+                      <ul>
+                        {feature.comments.split(';').map((comment, index) => (
+                          <li key={index}>{comment}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p>No comments</p>
+                    )}
+                    <input
+                      type="text"
+                      value={comment}
+                      onChange={(e) => setComment(e.target.value)}
+                    />
+                    <button onClick={() => handleCommentSubmit(feature.id)}>Submit</button>
+                  </td>
+                </tr>
+              )}
+            </React.Fragment>
             ))
           ) : (
             <tr>
@@ -172,7 +263,7 @@ function MainPage() {
           )}
         </tbody>
       </table>
-
+      
       {totalPages > 1 && (
         <div>
           <button disabled={currentPage === 1} onClick={() => handlePageChange(currentPage - 1)}>
