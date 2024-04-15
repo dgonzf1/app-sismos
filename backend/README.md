@@ -29,3 +29,7 @@ Things you may want to cover:
 '''
   rake data:fill_database
 '''
+
+## POST /eq_features/add_comment
+
+Endpoint to add comments.

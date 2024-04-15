@@ -13,7 +13,7 @@ class EqFeaturesController < ApplicationController
     else
       @eq_features = EqFeature.page(params[:page]).per(per_page)
     end
-    
+
     pagination_info = {
       current_page: @eq_features.current_page,
       total: @eq_features.total_count,
@@ -55,6 +55,47 @@ class EqFeaturesController < ApplicationController
   # DELETE /eq_features/1
   def destroy
     @eq_feature.destroy!
+  end
+
+  # POST /eq_features/add_comment
+  def add_comment 
+    begin
+      # Access JSON data from request body
+      request_body = request.body.read
+
+      comment_data = JSON.parse(request_body)
+      # Extract feature_id and body from JSON
+      feature_id = comment_data["feature_id"]
+      body = comment_data["body"]
+
+      # Check for semicolon in body
+      if comment_data["body"]&.include?(";")
+        raise ArgumentError, "Semicolon (;) not allowed in comment body"
+      end
+    
+      # Find the EqFeature record
+      @eq_feature = EqFeature.find_by(id: feature_id)
+    
+      if @eq_feature.present?
+        # Add comment with delimiter (use a unique character like ";")
+        existing_comments = @eq_feature.comments.presence || ""
+        updated_comments = existing_comments.empty? ? body : "#{existing_comments};#{body}"
+        @eq_feature.update!(comments: updated_comments)
+    
+        # Respond with success message or updated data (optional)
+        render json: { message: "Comment added successfully" }, status: :created
+      else
+        # Handle record not found error
+        render json: { error: "EqFeature not found" }, status: :not_found
+      end
+    rescue JSON::ParserError => e
+      # Handle invalid JSON parsing error
+      render json: { error: "Invalid JSON format in request body" }, status: :bad_request
+    rescue ArgumentError => e
+      # Handle semicolon error
+      render json: { error: e.message }, status: :unprocessable_entity
+    end
+  
   end
 
   private
